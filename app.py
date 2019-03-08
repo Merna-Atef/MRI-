@@ -96,6 +96,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.lastY = currentPositionY
         self.lastX = currentPositionX
+        
+    def plotting(self, T1=1000, T2=300):
+        t1graph = self.ui.graphicsPlotT1
+        t2gragh = self.ui.graphicsPlotT2
+        t1graph.clear()
+        t2gragh.clear()
+        t = np.linspace(0, 10000, 100) 
+        t1graph.plot(1 - np.exp(-t/T1))
+        t2gragh.plot(np.exp(-t/T2))  
+
 
 
 def main():
