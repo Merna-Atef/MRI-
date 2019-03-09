@@ -51,7 +51,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if isinstance(value, int): 
             if value >= 0 and value < 90:
                 self.FA = value
-                self.plotting()
              
     def validateTE(self, value):
         if isinstance(value, int) and value >= 0 and value < 90:
@@ -136,10 +135,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plotting(self, T1=1000, T2=300):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-        t1graph.clear()
-        t2gragh.clear()
-        t = np.linspace(0, 10000, 100) 	
-        t1graph.plot(np.cos(self.FA)*np.exp(-t/T1))
+        #t1graph.clear()
+       # t2gragh.clear()
+        t = np.linspace(0, 10000, 100)
+        deltT = t/T1
+        t1 = np.exp(deltT) 	
+        angle = np.cos(self.FA)*t1
+        t1graph.plot(angle)
         t2gragh.plot(-np.sin(self.FA)*np.exp(-t/T2))  
 
 def main():
