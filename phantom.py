@@ -104,6 +104,10 @@ def _select_phantom(name):
         e = _shepp_logan()
     elif (name.lower() == 'modified shepp-logan'):
         e = _mod_shepp_logan()
+    elif name.lower() == 't1':
+        e = _T1_phantom()
+    elif name.lower() == 't2':
+        e = _T2_phantom()
     else:
         raise ValueError("Unknown phantom type: %s" % name)
 
@@ -137,3 +141,33 @@ def _mod_shepp_logan():
             [.10, .0460, .0230, -.08, -.605, 0],
             [.10, .0230, .0230, 0, -.606, 0],
             [.10, .0230, .0460, .06, -.605, 0]]
+
+
+def _T1_phantom():
+    #  Modified version of Shepp & Logan's head phantom,
+    #  adjusted to improve contrast.  Taken from Toft.
+    return [[0.533, .69, .92, 0, 0, 0],
+            [3.667, .6624, .8740, 0, -.0184, 0],
+            [0, .1100, .3100, .22, 0, -18],
+            [0, .1600, .4100, -.22, 0, 18],
+            [-3.617, .2100, .2500, 0, .35, 0],
+            [-3.274, .0460, .0460, 0, .1, 0],
+            [-3.274, .0460, .0460, 0, -.1, 0],
+            [-3.274, .0460, .0230, -.08, -.605, 0],
+            [-3.274, .0230, .0230, 0, -.606, 0],
+            [-3.274, .0230, .0460, .06, -.605, 0]]
+
+
+def _T2_phantom():
+    #  Modified version of Shepp & Logan's head phantom,
+    #  adjusted to improve contrast.  Taken from Toft.
+    return [[0.05, .69, .92, 0, 0, 0],
+            [1.94, .6624, .8740, 0, -.0184, 0],
+            [0, .1100, .3100, .22, 0, -18],
+            [0, .1600, .4100, -.22, 0, 18],
+            [-1.91, .2100, .2500, 0, .35, 0],
+            [-1.98, .0460, .0460, 0, .1, 0],
+            [-1.98, .0460, .0460, 0, -.1, 0],
+            [-1.98, .0460, .0230, -.08, -.605, 0],
+            [-1.98, .0230, .0230, 0, -.606, 0],
+            [-1.98, .0230, .0460, .06, -.605, 0]]

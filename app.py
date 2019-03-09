@@ -25,10 +25,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
+        self.ui.phantomlbl.mousePressEvent = self.pixelClicked
 
+        self.ui.graphicsPlotT1.setMouseEnabled(False, False)
+        self.ui.graphicsPlotT2.setMouseEnabled(False, False)
+
+        # initialization
         self.qimg = None
         self.img = None
         self.originalPhantom = None
+        self.phantomSize = 512
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -40,24 +46,25 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def showPhantom(self, value):
         size = int(value)
+        self.phantomSize = size
         img = phantom(size)
         img = img * 255
         self.img = img
         self.originalPhantom = img
-        self.showPhantomImage(size)
+        self.showPhantomImage()
 
-    def showPhantomImage(self, size=512):
+    def showPhantomImage(self):
         self.qimg = qimage2ndarray.array2qimage(self.img)
         self.ui.phantomlbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.ui.phantomlbl.setGeometry(QtCore.QRect(70, 80, 100, 100))
         self.ui.phantomlbl.setPixmap(QPixmap(self.qimg))
 
+
     def changePhantomMode(self, value):
-        if value == "T1":
-            self.img = self.img % 90
-            self.showPhantomImage()
-        if value == "T2":
-            self.img = self.img % 900
-            self.showPhantomImage()
+        self.img = phantom(self.phantomSize, value)
+        self.img = self.img * (255 / np.max(self.img))
+        self.originalPhantom = self.img
+        self.showPhantomImage()
 
     def editContrastAndBrightness(self, event):
         if self.lastX is None:
@@ -96,16 +103,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.lastY = currentPositionY
         self.lastX = currentPositionX
-        
-    def plotting(self, T1=1000, T2=300):
+
+    def pixelClicked(self, event):
+        self.plotting()
+
+    def plotting(self, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
         t1graph.clear()
         t2gragh.clear()
-        t = np.linspace(0, 10000, 100) 
-        t1graph.plot(1 - np.exp(-t/T1))
-        t2gragh.plot(np.exp(-t/T2))  
 
+        t = np.linspace(0, 10000, 1000)
+        t1graph.plot(1 - np.exp(-t / T1))
+        t2gragh.plot(np.exp(-t / T2))
 
 
 def main():
