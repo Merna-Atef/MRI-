@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab1">
        <attribute name="title">
@@ -32,7 +32,7 @@
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_5">
               <item alignment="Qt::AlignVCenter">
-               <widget class="QPushButton" name="btnBrowse_3">
+               <widget class="QPushButton" name="btnBrowse">
                 <property name="minimumSize">
                  <size>
                   <width>100</width>
@@ -63,14 +63,14 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_13">
                 <item>
-                 <widget class="QPushButton" name="btnSheppCreate_3">
+                 <widget class="QPushButton" name="btnSheppCreate">
                   <property name="text">
                    <string>Shepp-Logan</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="comboSheppSize_3">
+                 <widget class="QComboBox" name="comboSheppSize">
                   <item>
                    <property name="text">
                     <string>128</string>
@@ -116,7 +116,7 @@
              </widget>
             </item>
             <item alignment="Qt::AlignLeft">
-             <widget class="QLineEdit" name="plotTime_3">
+             <widget class="QLineEdit" name="plotTime">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -138,7 +138,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
-           <widget class="QLabel" name="phantomlbl_3">
+           <widget class="QLabel" name="phantomlbl">
             <property name="minimumSize">
              <size>
               <width>128</width>
@@ -175,7 +175,7 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_6">
             <item>
-             <widget class="PlotWidget" name="graphicsPlotT1_3">
+             <widget class="PlotWidget" name="graphicsPlotT1">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -191,7 +191,7 @@
              </widget>
             </item>
             <item>
-             <widget class="PlotWidget" name="graphicsPlotT2_3">
+             <widget class="PlotWidget" name="graphicsPlotT2">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -239,7 +239,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QComboBox" name="comboViewMode_3">
+           <widget class="QComboBox" name="comboViewMode">
             <item>
              <property name="text">
               <string>Phantom</string>
@@ -286,7 +286,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="TimeEcho_3">
+           <widget class="QLineEdit" name="TimeEcho">
             <property name="maximumSize">
              <size>
               <width>40</width>
@@ -319,7 +319,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="TimeRepeat_3">
+           <widget class="QLineEdit" name="TimeRepeat">
             <property name="maximumSize">
              <size>
               <width>40</width>
@@ -352,7 +352,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="FlipAngle_3">
+           <widget class="QLineEdit" name="FlipAngle">
             <property name="maximumSize">
              <size>
               <width>40</width>
