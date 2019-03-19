@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QMessageBox
 from mriui import Ui_MainWindow
 from phantom import phantom
 import numpy as np
@@ -117,6 +118,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t1graph.plot(1 - np.exp(-t / T1))
         t2gragh.plot(np.exp(-t / T2))
 
+    def error(self, message):
+        errorBox = QMessageBox()
+        errorBox.setIcon(QMessageBox.Warning)
+        errorBox.setWindowTitle('WARNING')
+        errorBox.setText(message)
+        errorBox.setStandardButtons(QMessageBox.Ok)
+        errorBox.exec_()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
