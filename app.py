@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
-from mriui import Ui_MainWindow
+from PyQt5.QtWidgets import QMessageBox
+from mriUI import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
@@ -143,6 +144,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t1graph.plot(1 - np.exp(-t / T1))
         t2gragh.plot(np.exp(-t / T2))
 
+
     def setFA(self, value):
         print(value)
 
@@ -180,6 +182,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def showKSpace(self, img):
         qimg = qimage2ndarray.array2qimage(np.abs(img))
         self.ui.kspaceLbl.setPixmap(QPixmap(qimg))
+
+
+    def error(self, message):
+        errorBox = QMessageBox()
+        errorBox.setIcon(QMessageBox.Warning)
+        errorBox.setWindowTitle('WARNING')
+        errorBox.setText(message)
+        errorBox.setStandardButtons(QMessageBox.Ok)
+        errorBox.exec_()
 
 
 def main():
