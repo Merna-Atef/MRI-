@@ -48,6 +48,11 @@
            <widget class="QComboBox" name="comboSheppSize">
             <item>
              <property name="text">
+              <string>32</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
               <string>128</string>
              </property>
             </item>
