@@ -18,7 +18,7 @@ MIN_CONTRAST = 0.1
 MAX_BRIGHTNESS = 100
 MIN_BRIGHTNESS = -100
 SAFETY_MARGIN = 10
-MAX_PIXELS_CLICKED = 2
+MAX_PIXELS_CLICKED = 3
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -58,7 +58,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.x = 0
         self.y = 0
 
-        self.pixelsClicked = [(0, 0)]
+        self.pixelsClicked = [(0, 0), (0, 0), (0, 0)]
+        self.pixelSelector = 0
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -77,7 +78,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.T1 = phantom(size, 'T1')
         self.T2 = phantom(size, 'T2')
         self.originalPhantom = img
-        self.pixelsClicked = [(0, 0)]
+        self.pixelsClicked = [(0, 0), [0, 0], [0, 0]]
         self.showPhantomImage()
 
     def showPhantomImage(self):
@@ -132,6 +133,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lastX = currentPositionX
 
     def pixelClicked(self, event):
+        self.pixelSelector = self.pixelSelector + 1
+        self.pixelSelector = self.pixelSelector % 3
         t1Matrix = self.T1
         t2Matrix = self.T2
         self.x = event.pos().x()
@@ -146,23 +149,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
             self.pixelsClicked.pop(0)
         self.update()
-        self.paintEvent(event)
+        # self.paintEvent(event)
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
         t1graph.clear()
         t2gragh.clear()
-        i = 0
+
         for pixelSet in self.pixelsClicked:
             x = pixelSet[0]
             y = pixelSet[1]
-            if i == 0:
+            if self.pixelSelector == 0:
                 color = 'r'
-            if i == 1:
+            if self.pixelSelector == 1:
                 color = 'b'
+            if self.pixelSelector == 2:
+                color = 'y'
             t1 = t1Matrix[y][x]
             t2 = t2Matrix[y][x]
             self.plotting(color, t1 * 1000, t2 * 1000)
-            i += 1
+            self.pixelSelector += 1
+            self.pixelSelector = self.pixelSelector % 3
 
     def paintEvent(self, event):
         # create painter instance with pixmap
@@ -170,21 +176,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         paint = QtGui.QPainter()
         paint.begin(canvas)
         # set rectangle color and thickness
-        i = 0
+
         for pixelSet in self.pixelsClicked:
             self.x = pixelSet[0]
             self.y = pixelSet[1]
-            if i == 0:
+            if self.pixelSelector == 0:
                 pen = QtGui.QPen(QtCore.Qt.red)
-            if i == 1:
+            if self.pixelSelector == 1:
                 pen = QtGui.QPen(QtCore.Qt.blue)
+            if self.pixelSelector == 2:
+                pen = QtGui.QPen(QtCore.Qt.yellow)
             pen.setWidth(0.5)
             # draw rectangle on painter
             paint.setPen(pen)
             paint.drawRect(self.x - 1, self.y - 1, 2, 2)
             # set pixmap onto the label widget
             self.ui.phantomlbl.setPixmap(canvas)
-            i += 1
+            self.pixelSelector += 1
+            self.pixelSelector = self.pixelSelector % 3
         paint.end()
 
     def plotting(self, color, T1=1000, T2=45):
@@ -208,6 +217,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             value = float(value)
             self.TE = value
+
+
+
         except:
             self.error("TE must be a float")
 
