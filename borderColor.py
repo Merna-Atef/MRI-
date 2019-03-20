@@ -7,6 +7,7 @@ import numpy as np
 import qimage2ndarray
 import sys
 from PyQt5.QtWidgets import QFileDialog
+import math
 
 MAX_CONTRAST = 2
 MIN_CONTRAST = 0.1
@@ -111,7 +112,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.plotting()
         self.begin = event.pos().x()
         self.end = event.pos().y()
+        
+        xt = self.ui.phantomlbl.frameGeometry().width()
+        yt = self.ui.phantomlbl.frameGeometry().height()
+        x = event.pos().x() * (self.phantomSize / xt)
+        y = event.pos().y() * (self.phantomSize / yt)
+        x = math.floor(x)
+        y = math.floor(y)
+        self.begin = x
+        self.end = y
         self.update()
+        self.paintEvent(event)
 
     def paintEvent(self, event):
 

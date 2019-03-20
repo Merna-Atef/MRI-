@@ -50,6 +50,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.FA = 90
         self.TE = 0.001
         self.TR = 0.5
+        self.x = 0
+        self.y = 0
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -124,15 +126,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def pixelClicked(self, event):
         t1Matrix = self.T1
         t2Matrix = self.T2
+        self.x = event.pos().x()
+        self.y = event.pos().y()
         xt = self.ui.phantomlbl.frameGeometry().width()
         yt = self.ui.phantomlbl.frameGeometry().height()
         x = event.pos().x() * (self.phantomSize / xt)
         y = event.pos().y() * (self.phantomSize / yt)
         x = math.floor(x)
         y = math.floor(y)
+        self.x = x
+        self.y = y
+        self.update()
+        self.paintEvent(event)
         t1 = t1Matrix[y][x]
         t2 = t2Matrix[y][x]
         self.plotting(t1 * 1000, t2 * 1000)
+
+    def paintEvent(self, event):
+        # create painter instance with pixmap
+        canvas = QPixmap(self.qimg)
+        paint = QtGui.QPainter()
+        paint.begin(canvas)
+        # set rectangle color and thickness
+        pen = QtGui.QPen(QtCore.Qt.red)
+        pen.setWidth(0.5)
+        # draw rectangle on painter
+        paint.setPen(pen)
+        paint.drawRect(self.x - 1, self.y - 1 ,2,2)
+        # set pixmap onto the label widget
+        self.ui.phantomlbl.setPixmap(canvas)
+        paint.end()
 
     def plotting(self, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
