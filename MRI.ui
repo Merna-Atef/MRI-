@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>693</width>
-    <height>351</height>
+    <height>348</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,6 +41,12 @@
            <widget class="QPushButton" name="btnSheppCreate">
             <property name="text">
              <string>Shepp-Logan</string>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -106,35 +112,6 @@
          </widget>
         </item>
        </layout>
-      </item>
-      <item alignment="Qt::AlignRight">
-       <widget class="QLabel" name="label_11">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Time Span</string>
-        </property>
-       </widget>
-      </item>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QLineEdit" name="plotTime">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>40</width>
-          <height>10</height>
-         </size>
-        </property>
-       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer">

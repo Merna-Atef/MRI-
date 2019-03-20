@@ -1,16 +1,13 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriui import Ui_MainWindow
+from mriUI import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
 import sys
-import math
-import threading
-from rotation import rotateX, gradientXY
-from RD import recovery, decay
 from PyQt5.QtWidgets import QFileDialog
+import math
 
 MAX_CONTRAST = 2
 MIN_CONTRAST = 0.1
@@ -27,17 +24,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.ui.comboSheppSize.currentTextChanged.connect(self.showPhantom)
         self.ui.comboViewMode.currentTextChanged.connect(self.changePhantomMode)
-        self.ui.startSeq.clicked.connect(self.runSequence)
-        self.ui.FlipAngle.textChanged.connect(self.setFA)
-        self.ui.TimeEcho.textChanged.connect(self.setTE)
-        self.ui.TimeRepeat.textChanged.connect(self.setTR)
 
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
         self.ui.phantomlbl.mousePressEvent = self.pixelClicked
-        self.ui.phantomlbl.setScaledContents(True)
-
-        self.ui.kspaceLbl.setScaledContents(True)
 
         self.ui.graphicsPlotT1.setMouseEnabled(False, False)
         self.ui.graphicsPlotT2.setMouseEnabled(False, False)
@@ -46,15 +36,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.qimg = None
         self.img = None
         self.originalPhantom = None
-        self.T1 = None
-        self.T2 = None
         self.phantomSize = 512
-        self.FA = 90
-
-        self.TE = 0.001
-        self.TR = 0.5
-        self.x = 0
-        self.y = 0
+        self.begin = 0
+        self.end = 0
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -70,17 +54,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         img = phantom(size)
         img = img * 255
         self.img = img
-        self.T1 = phantom(size, 'T1')
-        self.T2 = phantom(size, 'T2')
         self.originalPhantom = img
         self.showPhantomImage()
 
     def showPhantomImage(self):
         self.qimg = qimage2ndarray.array2qimage(self.img)
-        # self.ui.phantomlbl.setAlignment(QtCore.Qt.AlignCenter)
-        # self.ui.phantomlbl.setFixedWidth(self.phantomSize)
-        # self.ui.phantomlbl.setFixedHeight(self.phantomSize)
+        self.ui.phantomlbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.ui.phantomlbl.setScaledContents(True)
         self.ui.phantomlbl.setPixmap(QPixmap(self.qimg))
+
 
     def changePhantomMode(self, value):
         self.img = phantom(self.phantomSize, value)
@@ -127,39 +109,39 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lastX = currentPositionX
 
     def pixelClicked(self, event):
-        t1Matrix = self.T1
-        t2Matrix = self.T2
-        self.x = event.pos().x()
-        self.y = event.pos().y()
+        self.plotting()
+        self.begin = event.pos().x()
+        self.end = event.pos().y()
+        
         xt = self.ui.phantomlbl.frameGeometry().width()
         yt = self.ui.phantomlbl.frameGeometry().height()
         x = event.pos().x() * (self.phantomSize / xt)
         y = event.pos().y() * (self.phantomSize / yt)
         x = math.floor(x)
         y = math.floor(y)
-        self.x = x
-        self.y = y
+        self.begin = x
+        self.end = y
         self.update()
         self.paintEvent(event)
-        t1 = t1Matrix[y][x]
-        t2 = t2Matrix[y][x]
-        self.plotting(t1 * 1000, t2 * 1000)
 
     def paintEvent(self, event):
+
         # create painter instance with pixmap
-        canvas = QPixmap(self.qimg)
-        paint = QtGui.QPainter()
-        paint.begin(canvas)
+        q = QPixmap(self.qimg)
+        qp = QtGui.QPainter()
+        qp.begin(q)
         # set rectangle color and thickness
         pen = QtGui.QPen(QtCore.Qt.red)
-        pen.setWidth(0.5)
-        # draw rectangle on painter
-        paint.setPen(pen)
-        paint.drawRect(self.x - 1, self.y - 1, 2, 2)
-        # set pixmap onto the label widget
-        self.ui.phantomlbl.setPixmap(canvas)
-        paint.end()
+        pen.setWidth(1)
 
+        # draw rectangle on painter
+        qp.setPen(pen)
+        qp.drawRect(self.begin, self.end,4,4)
+
+        # set pixmap onto the label widget
+        self.ui.phantomlbl.setPixmap(q)
+        qp.end()
+    
     def plotting(self, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
@@ -170,71 +152,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t1graph.plot(1 - np.exp(-t / T1))
         t2gragh.plot(np.exp(-t / T2))
 
-    def setFA(self, value):
-        print(value)
-        try:
-            value = int(value)
-            self.FA = value
-        except:
-            self.error("FA must be a number")
-
-    def setTE(self, value):
-        print(value)
-        try:
-            value = float(value)
-            self.TE = value
-        except:
-            self.error("TE must be a float")
-
-    def setTR(self, value):
-        print(value)
-        try:
-            value = float(value)
-            self.TR = value
-        except:
-            self.error("TR must be a float")
-
-    def runSequence(self):
-        threading.Thread(target=self.reconstructImage).start()
-        return
-
-    def reconstructImage(self):
-        kSpace = np.zeros((self.phantomSize, self.phantomSize), dtype=np.complex_)
-        vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
-        vectors[:, :, 2] = 1
-
-        for i in range(0, self.phantomSize):
-            rotatedMatrix = rotateX(vectors, self.FA)
-            decayedRotatedMatrix = decay(rotatedMatrix, self.T2, self.TE)
-
-            for j in range(0, self.phantomSize):
-                stepX = (360 / self.phantomSize) * i
-                stepY = (360 / self.phantomSize) * j
-                phaseEncodedMatrix = gradientXY(decayedRotatedMatrix, stepY, stepX)
-                sigmaX = np.sum(phaseEncodedMatrix[:, :, 0])
-                sigmaY = np.sum(phaseEncodedMatrix[:, :, 1])
-                valueToAdd = np.complex(sigmaX, sigmaY)
-                kSpace[i, j] = valueToAdd
-
-            decayedRotatedMatrix[:, :, 0] = 0
-            decayedRotatedMatrix[:, :, 1] = 0
-            vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
-            # vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
-            # vectors[:, :, 2] = 1
-            self.showKSpace(kSpace)
-            print(i)
-
-        kSpace = np.fft.fftshift(kSpace)
-        for i in range(0, self.phantomSize):
-            kSpace[i, :] = np.fft.fft(kSpace[i, :])
-        for i in range(0, self.phantomSize):
-            kSpace[:, i] = np.fft.fft(kSpace[:, i])
-        self.showKSpace(kSpace)
-
-    def showKSpace(self, img):
-        qimg = qimage2ndarray.array2qimage(np.abs(img))
-        self.ui.kspaceLbl.setPixmap(QPixmap(qimg))
-
     def error(self, message):
         errorBox = QMessageBox()
         errorBox.setIcon(QMessageBox.Warning)
@@ -242,7 +159,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         errorBox.setText(message)
         errorBox.setStandardButtons(QMessageBox.Ok)
         errorBox.exec_()
-
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
