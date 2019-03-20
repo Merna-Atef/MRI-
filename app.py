@@ -10,6 +10,7 @@ import math
 import threading
 from rotation import rotateX, gradientXY
 from RD import recovery, decay
+import pyqtgraph as pg
 from PyQt5.QtWidgets import QFileDialog
 
 MAX_CONTRAST = 2
@@ -17,6 +18,7 @@ MIN_CONTRAST = 0.1
 MAX_BRIGHTNESS = 100
 MIN_BRIGHTNESS = -100
 SAFETY_MARGIN = 10
+MAX_PIXELS_CLICKED = 2
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -49,12 +51,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.T1 = None
         self.T2 = None
         self.phantomSize = 512
-        self.FA = 90
 
+        self.FA = 90
         self.TE = 0.001
         self.TR = 0.5
         self.x = 0
         self.y = 0
+
+        self.pixelsClicked = [(0, 0)]
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -73,6 +77,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.T1 = phantom(size, 'T1')
         self.T2 = phantom(size, 'T2')
         self.originalPhantom = img
+        self.pixelsClicked = [(0, 0)]
         self.showPhantomImage()
 
     def showPhantomImage(self):
@@ -137,13 +142,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         y = event.pos().y() * (self.phantomSize / yt)
         x = math.floor(x)
         y = math.floor(y)
-        self.x = x
-        self.y = y
+        self.pixelsClicked.append((x, y))
+        if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
+            self.pixelsClicked.pop(0)
         self.update()
         self.paintEvent(event)
-        t1 = t1Matrix[y][x]
-        t2 = t2Matrix[y][x]
-        self.plotting(t1 * 1000, t2 * 1000)
+        t1graph = self.ui.graphicsPlotT1
+        t2gragh = self.ui.graphicsPlotT2
+        t1graph.clear()
+        t2gragh.clear()
+        i = 0
+        for pixelSet in self.pixelsClicked:
+            x = pixelSet[0]
+            y = pixelSet[1]
+            if i == 0:
+                color = 'r'
+            if i == 1:
+                color = 'b'
+            t1 = t1Matrix[y][x]
+            t2 = t2Matrix[y][x]
+            self.plotting(color, t1 * 1000, t2 * 1000)
+            i += 1
 
     def paintEvent(self, event):
         # create painter instance with pixmap
@@ -151,24 +170,30 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         paint = QtGui.QPainter()
         paint.begin(canvas)
         # set rectangle color and thickness
-        pen = QtGui.QPen(QtCore.Qt.red)
-        pen.setWidth(0.5)
-        # draw rectangle on painter
-        paint.setPen(pen)
-        paint.drawRect(self.x - 1, self.y - 1, 2, 2)
-        # set pixmap onto the label widget
-        self.ui.phantomlbl.setPixmap(canvas)
+        i = 0
+        for pixelSet in self.pixelsClicked:
+            self.x = pixelSet[0]
+            self.y = pixelSet[1]
+            if i == 0:
+                pen = QtGui.QPen(QtCore.Qt.red)
+            if i == 1:
+                pen = QtGui.QPen(QtCore.Qt.blue)
+            pen.setWidth(0.5)
+            # draw rectangle on painter
+            paint.setPen(pen)
+            paint.drawRect(self.x - 1, self.y - 1, 2, 2)
+            # set pixmap onto the label widget
+            self.ui.phantomlbl.setPixmap(canvas)
+            i += 1
         paint.end()
 
-    def plotting(self, T1=1000, T2=45):
+    def plotting(self, color, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-        t1graph.clear()
-        t2gragh.clear()
 
         t = np.linspace(0, 10000, 1000)
-        t1graph.plot(1 - np.exp(-t / T1))
-        t2gragh.plot(np.exp(-t / T2))
+        t1graph.plot(1 - np.exp(-t / T1), pen=pg.mkPen(color))
+        t2gragh.plot(np.exp(-t / T2), pen=pg.mkPen(color))
 
     def setFA(self, value):
         print(value)
@@ -232,6 +257,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.showKSpace(kSpace)
 
     def showKSpace(self, img):
+        # img = img[:]
+        # img = img * (255 / np.max(img))
         qimg = qimage2ndarray.array2qimage(np.abs(img))
         self.ui.kspaceLbl.setPixmap(QPixmap(qimg))
 
