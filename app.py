@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriui import Ui_MainWindow
+from mriUI import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
@@ -12,6 +12,7 @@ from rotation import rotateX, gradientXY
 from RD import recovery, decay
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QFileDialog
+from math import sin, cos, pi
 
 MAX_CONTRAST = 2
 MIN_CONTRAST = 0.1
@@ -175,6 +176,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         canvas = QPixmap(self.qimg)
         paint = QtGui.QPainter()
         paint.begin(canvas)
+
         # set rectangle color and thickness
 
         for pixelSet in self.pixelsClicked:
@@ -187,8 +189,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.pixelSelector == 2:
                 pen = QtGui.QPen(QtCore.Qt.yellow)
             pen.setWidth(0.5)
-            # draw rectangle on painter
             paint.setPen(pen)
+            # draw rectangle on painter
             paint.drawRect(self.x - 1, self.y - 1, 2, 2)
             # set pixmap onto the label widget
             self.ui.phantomlbl.setPixmap(canvas)
@@ -199,10 +201,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plotting(self, color, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-
+        theta = self.FA * pi / 180
         t = np.linspace(0, 10000, 1000)
-        t1graph.plot(1 - np.exp(-t / T1), pen=pg.mkPen(color))
-        t2gragh.plot(np.exp(-t / T2), pen=pg.mkPen(color))
+        t1graph.plot(np.exp(-t / T1) * cos(theta) + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
+        t2gragh.plot(sin(theta) * np.exp(-t / T2), pen=pg.mkPen(color))
 
     def setFA(self, value):
         print(value)

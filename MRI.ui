@@ -285,7 +285,7 @@
         </property>
         <item>
          <property name="text">
-          <string>Phantom</string>
+          <string>PD</string>
          </property>
         </item>
         <item>
@@ -296,11 +296,6 @@
         <item>
          <property name="text">
           <string>T2</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>PD</string>
          </property>
         </item>
        </widget>
