@@ -1,10 +1,10 @@
 import numpy as np
 from PIL import Image
 from phantom import phantom
+import cv2
+img = cv2.imread('128.png',  cv2.IMREAD_GRAYSCALE)
 
-img = phantom(30)
 f_img = np.fft.fft2(img)
-
 reconstructed = np.fft.ifft2(f_img)
 
 reconstructed2 = np.zeros(np.shape(img), dtype=np.complex_)
