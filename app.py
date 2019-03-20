@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriUI import Ui_MainWindow
+from mriui import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
