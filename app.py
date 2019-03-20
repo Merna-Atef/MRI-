@@ -13,6 +13,7 @@ from RD import recovery, decay
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QFileDialog
 from math import sin, cos, pi
+import csv
 
 MAX_CONTRAST = 2
 MIN_CONTRAST = 0.1
@@ -28,20 +29,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        #Actions
         self.ui.comboSheppSize.currentTextChanged.connect(self.showPhantom)
         self.ui.comboViewMode.currentTextChanged.connect(self.changePhantomMode)
         self.ui.startSeq.clicked.connect(self.runSequence)
         self.ui.FlipAngle.textChanged.connect(self.setFA)
         self.ui.TimeEcho.textChanged.connect(self.setTE)
         self.ui.TimeRepeat.textChanged.connect(self.setTR)
+        self.ui.btnBrowse.clicked.connect(self.browse)
 
+        #Mouse Events
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
         self.ui.phantomlbl.mousePressEvent = self.pixelClicked
+        
+        #Scaling
         self.ui.phantomlbl.setScaledContents(True)
-
         self.ui.kspaceLbl.setScaledContents(True)
 
+        #Plots
         self.ui.graphicsPlotT1.setMouseEnabled(False, False)
         self.ui.graphicsPlotT2.setMouseEnabled(False, False)
 
@@ -72,6 +79,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.contrast = 1.0
         self.brightness = 0
 
+    def browse(self):
+        #Open Browse Window & Check 
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV", (QtCore.QDir.homePath()), "CSV (*.csv)")
+        if fileName:
+            #Check extension 
+            try:
+                self.img = np.zeros([512,512])
+                self.T1 = np.zeros([512,512])
+                self.T2 = np.zeros([512,512])
+                mat = np.genfromtxt(fileName,delimiter=',')
+                self.img = mat[0:512]
+                print(np.shape(self.img))
+                self.T1 = mat[512:1024]
+                print(np.shape(self.T1))
+                self.T2 = mat[1024:1537]
+                print(np.shape(self.T2))
+                self.showPhantomImage()
+            except (IOError, SyntaxError):
+                self.error('Check File Extension')           
+    
     def showPhantom(self, value):
         size = int(value)
         self.phantomSize = size
