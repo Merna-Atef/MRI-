@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriui import Ui_MainWindow
+from mriUI import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
@@ -54,6 +54,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.phantomSize = 512
 
         self.FA = 90
+        self.cosFA = 0
+        self.sinFA = 1
         self.TE = 0.001
         self.TR = 0.5
         self.x = 0
@@ -90,10 +92,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.phantomlbl.setPixmap(QPixmap(self.qimg))
 
     def changePhantomMode(self, value):
-        self.img = phantom(self.phantomSize, value)
-        self.img = self.img * (255 / np.max(self.img))
-        self.originalPhantom = self.img
-        self.showPhantomImage()
+        if self.img is None:
+            self.error('Choose a phantom first')
+        else:
+            self.img = phantom(self.phantomSize, value)
+            self.img = self.img * (255 / np.max(self.img))
+            self.originalPhantom = self.img
+            self.showPhantomImage()
 
     def editContrastAndBrightness(self, event):
         if self.lastX is None:
@@ -201,16 +206,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plotting(self, color, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-        theta = self.FA * pi / 180
+        #theta = self.FA * pi / 180
         t = np.linspace(0, 10000, 1000)
-        t1graph.plot(np.exp(-t / T1) * cos(theta) + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
-        t2gragh.plot(sin(theta) * np.exp(-t / T2), pen=pg.mkPen(color))
+        t1graph.plot(np.exp(-t / T1) * self.cosFA + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
+        t2gragh.plot(self.sinFA * np.exp(-t / T2), pen=pg.mkPen(color))
 
     def setFA(self, value):
         print(value)
         try:
             value = int(value)
             self.FA = value
+            self.cosFA = cos(self.FA * pi/180)
+            self.sinFA = sin(self.FA * pi/180)
         except:
             self.error("FA must be a number")
 
@@ -219,9 +226,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             value = float(value)
             self.TE = value
-
-
-
         except:
             self.error("TE must be a float")
 
@@ -234,8 +238,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.error("TR must be a float")
 
     def runSequence(self):
-        threading.Thread(target=self.reconstructImage).start()
-        return
+        if self.img is None:
+            self.error('Choose a phantom first')
+        else:
+            threading.Thread(target=self.reconstructImage).start()
+            return
 
     def reconstructImage(self):
         kSpace = np.zeros((self.phantomSize, self.phantomSize), dtype=np.complex_)
@@ -243,7 +250,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         vectors[:, :, 2] = 1
 
         for i in range(0, self.phantomSize):
-            rotatedMatrix = rotateX(vectors, self.FA)
+            rotatedMatrix = rotateX(vectors, self.cosFA, self.sinFA)
             decayedRotatedMatrix = decay(rotatedMatrix, self.T2, self.TE)
 
             for j in range(0, self.phantomSize):
@@ -260,7 +267,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
             # vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
             # vectors[:, :, 2] = 1
-            self.showKSpace(kSpace)
+            #self.showKSpace(kSpace)
             print(i)
 
         kSpace = np.fft.fftshift(kSpace)
@@ -283,7 +290,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         errorBox.setText(message)
         errorBox.setStandardButtons(QMessageBox.Ok)
         errorBox.exec_()
-
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
