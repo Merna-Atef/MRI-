@@ -166,42 +166,45 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lastX = currentPositionX
 
     def pixelClicked(self, event):
-        self.pixelSelector = self.pixelSelector + 1
-        self.pixelSelector = self.pixelSelector % 3
-        t1Matrix = self.T1
-        t2Matrix = self.T2
-        self.x = event.pos().x()
-        self.y = event.pos().y()
-        xt = self.ui.phantomlbl.frameGeometry().width()
-        yt = self.ui.phantomlbl.frameGeometry().height()
-        x = event.pos().x() * (self.phantomSize / xt)
-        y = event.pos().y() * (self.phantomSize / yt)
-        x = math.floor(x)
-        y = math.floor(y)
-        self.pixelsClicked.append((x, y))
-        if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
-            self.pixelsClicked.pop(0)
-        self.update()
-        # self.paintEvent(event)
-        t1graph = self.ui.graphicsPlotT1
-        t2gragh = self.ui.graphicsPlotT2
-        t1graph.clear()
-        t2gragh.clear()
-
-        for pixelSet in self.pixelsClicked:
-            x = pixelSet[0]
-            y = pixelSet[1]
-            if self.pixelSelector == 0:
-                color = 'r'
-            if self.pixelSelector == 1:
-                color = 'b'
-            if self.pixelSelector == 2:
-                color = 'y'
-            t1 = t1Matrix[y][x]
-            t2 = t2Matrix[y][x]
-            self.plotting(color, t1 * 1000, t2 * 1000)
-            self.pixelSelector += 1
+        if self.img = None:
+            self.error('Choose Phantom First')
+        else:
+            self.pixelSelector = self.pixelSelector + 1
             self.pixelSelector = self.pixelSelector % 3
+            t1Matrix = self.T1
+            t2Matrix = self.T2
+            self.x = event.pos().x()
+            self.y = event.pos().y()
+            xt = self.ui.phantomlbl.frameGeometry().width()
+            yt = self.ui.phantomlbl.frameGeometry().height()
+            x = event.pos().x() * (self.phantomSize / xt)
+            y = event.pos().y() * (self.phantomSize / yt)
+            x = math.floor(x)
+            y = math.floor(y)
+            self.pixelsClicked.append((x, y))
+            if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
+                self.pixelsClicked.pop(0)
+            self.update()
+            # self.paintEvent(event)
+            t1graph = self.ui.graphicsPlotT1
+            t2gragh = self.ui.graphicsPlotT2
+            t1graph.clear()
+            t2gragh.clear()
+
+            for pixelSet in self.pixelsClicked:
+                x = pixelSet[0]
+                y = pixelSet[1]
+                if self.pixelSelector == 0:
+                    color = 'r'
+                if self.pixelSelector == 1:
+                    color = 'b'
+                if self.pixelSelector == 2:
+                    color = 'y'
+                t1 = t1Matrix[y][x]
+                t2 = t2Matrix[y][x]
+                self.plotting(color, t1 * 1000, t2 * 1000)
+                self.pixelSelector += 1
+                self.pixelSelector = self.pixelSelector % 3
 
     def paintEvent(self, event):
         # create painter instance with pixmap
@@ -298,6 +301,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(i)
 
         kSpace = np.fft.fftshift(kSpace)
+        #kSpace = np.fft.fft2(kSpace)
         for i in range(0, self.phantomSize):
             kSpace[i, :] = np.fft.fft(kSpace[i, :])
         for i in range(0, self.phantomSize):
