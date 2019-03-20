@@ -294,7 +294,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
             # vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
             # vectors[:, :, 2] = 1
-            #self.showKSpace(kSpace)
+            self.showKSpace(kSpace)
             print(i)
 
         kSpace = np.fft.fftshift(kSpace)
