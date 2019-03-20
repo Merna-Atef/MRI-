@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriUI import Ui_MainWindow
+from mriui import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
@@ -29,6 +29,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.comboViewMode.currentTextChanged.connect(self.changePhantomMode)
         self.ui.startSeq.clicked.connect(self.runSequence)
         self.ui.FlipAngle.textChanged.connect(self.setFA)
+        self.ui.TimeEcho.textChanged.connect(self.setTE)
+        self.ui.TimeRepeat.textChanged.connect(self.setTR)
 
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
@@ -48,8 +50,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.T2 = None
         self.phantomSize = 512
         self.FA = 90
-        self.TE = 0.001
-        self.TR = 0.5
+        self.TE = 0.05
+        self.TR = 30
 
         # For Mouse moving, changing Brightness and Contrast
         self.lastY = None
@@ -144,9 +146,29 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t1graph.plot(1 - np.exp(-t / T1))
         t2gragh.plot(np.exp(-t / T2))
 
-
     def setFA(self, value):
         print(value)
+        try:
+            value = int(value)
+            self.FA = value
+        except:
+            self.error("FA must be a number")
+
+    def setTE(self, value):
+        print(value)
+        try:
+            value = float(value)
+            self.TE = value
+        except:
+            self.error("TE must be a float")
+
+    def setTR(self, value):
+        print(value)
+        try:
+            value = float(value)
+            self.TR = value
+        except:
+            self.error("TR must be a float")
 
     def runSequence(self):
         threading.Thread(target=self.reconstructImage).start()
@@ -162,8 +184,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             decayedRotatedMatrix = decay(rotatedMatrix, self.T2, self.TE)
 
             for j in range(0, self.phantomSize):
-                stepX = (360 / self.phantomSize) * j
-                stepY = (360 / self.phantomSize) * i
+                stepX = (360 / self.phantomSize) * i
+                stepY = (360 / self.phantomSize) * j
                 phaseEncodedMatrix = gradientXY(decayedRotatedMatrix, stepY, stepX)
                 sigmaX = np.sum(phaseEncodedMatrix[:, :, 0])
                 sigmaY = np.sum(phaseEncodedMatrix[:, :, 1])
@@ -173,16 +195,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             decayedRotatedMatrix[:, :, 0] = 0
             decayedRotatedMatrix[:, :, 1] = 0
             vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
+            # vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
+            # vectors[:, :, 2] = 1
             self.showKSpace(kSpace)
             print(i)
 
-        kSpace = np.fft.ifftshift(kSpace)
+        kSpace = np.fft.fftshift(kSpace)
+        for i in range(0, self.phantomSize):
+            kSpace[i, :] = np.fft.fft(kSpace[i, :])
+        for i in range(0, self.phantomSize):
+            kSpace[:, i] = np.fft.fft(kSpace[:, i])
         self.showKSpace(kSpace)
 
     def showKSpace(self, img):
         qimg = qimage2ndarray.array2qimage(np.abs(img))
         self.ui.kspaceLbl.setPixmap(QPixmap(qimg))
-
 
     def error(self, message):
         errorBox = QMessageBox()

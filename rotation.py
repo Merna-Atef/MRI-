@@ -35,7 +35,7 @@ def gradientXY(matrix, stepY, stepX):
     newMatrix = np.zeros(shape)
     for i in range(0, rows):
         for j in range(0, cols):
-            angle = stepY * i + stepX * j
+            angle = stepY * j + stepX * i
             angle = (angle) * (pi / 180)
             newMatrix[i, j] = np.dot(
                 np.array([[cos(angle), -1 * sin(angle), 0], [sin(angle), cos(angle), 0], [0, 0, 1]]), matrix[i, j])
