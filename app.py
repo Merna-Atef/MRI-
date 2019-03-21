@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from mriui import Ui_MainWindow
+from mriUI import Ui_MainWindow
 from phantom import phantom
 import numpy as np
 import qimage2ndarray
@@ -89,15 +89,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if fileName:
             #Check extension
             try:
-                self.img = np.zeros([512,512])
-                self.T1 = np.zeros([512,512])
-                self.T2 = np.zeros([512,512])
                 mat = np.genfromtxt(fileName,delimiter=',')
-                self.img = mat[0:512]
+                row = math.floor(np.shape(mat)[0]/3)
+                col = np.shape(mat)[1]
+                self.img = np.zeros([row, col])
+                self.T1 = np.zeros([row,col])
+                self.T2 = np.zeros([row,col])
+                self.img = mat[0:row]
+                self.PD = self.img
+                self.originalPhantom = self.img
+                self.phantomSize = row
                 print(np.shape(self.img))
-                self.T1 = mat[512:1024]
+                self.T1 = mat[row:2*row]
                 print(np.shape(self.T1))
-                self.T2 = mat[1024:1537]
+                self.T2 = mat[2*row:3*row+1]
                 print(np.shape(self.T2))
                 self.showPhantomImage()
             except (IOError, SyntaxError):
