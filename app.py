@@ -30,7 +30,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        #Actions
+        # Actions
         self.ui.comboSheppSize.currentTextChanged.connect(self.showPhantom)
         self.ui.comboViewMode.currentTextChanged.connect(self.changePhantomMode)
         self.ui.startSeq.clicked.connect(self.runSequence)
@@ -39,19 +39,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.TimeRepeat.textChanged.connect(self.setTR)
         self.ui.btnBrowse.clicked.connect(self.browse)
 
-        #Mouse Events
+        # Mouse Events
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
         self.ui.phantomlbl.mouseDoubleClickEvent = self.pixelClicked
 
-
-
-        #Scaling
+        # Scaling
 
         self.ui.phantomlbl.setScaledContents(True)
         self.ui.kspaceLbl.setScaledContents(True)
 
-        #Plots
+        # Plots
         self.ui.graphicsPlotT1.setMouseEnabled(False, False)
         self.ui.graphicsPlotT2.setMouseEnabled(False, False)
 
@@ -84,15 +82,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.brightness = 0
 
     def browse(self):
-        #Open Browse Window & Check
+        # Open Browse Window & Check
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV", (QtCore.QDir.homePath()), "CSV (*.csv)")
         if fileName:
-            #Check extension
+            # Check extension
             try:
-                self.img = np.zeros([512,512])
-                self.T1 = np.zeros([512,512])
-                self.T2 = np.zeros([512,512])
-                mat = np.genfromtxt(fileName,delimiter=',')
+                self.img = np.zeros([512, 512])
+                self.T1 = np.zeros([512, 512])
+                self.T2 = np.zeros([512, 512])
+                mat = np.genfromtxt(fileName, delimiter=',')
                 self.img = mat[0:512]
                 print(np.shape(self.img))
                 self.T1 = mat[512:1024]
@@ -135,7 +133,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.img = self.img * (255 / np.max(self.img))
         self.originalPhantom = self.img
         self.showPhantomImage()
-
 
     def editContrastAndBrightness(self, event):
         if self.lastX is None:
@@ -246,7 +243,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plotting(self, color, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-        #theta = self.FA * pi / 180
+        # theta = self.FA * pi / 180
         t = np.linspace(0, 10000, 1000)
         t1graph.plot(np.exp(-t / T1) * self.cosFA + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
         t2gragh.plot(self.sinFA * np.exp(-t / T2), pen=pg.mkPen(color))
@@ -256,8 +253,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             value = int(value)
             self.FA = value
-            self.cosFA = cos(self.FA * pi/180)
-            self.sinFA = sin(self.FA * pi/180)
+            self.cosFA = cos(self.FA * pi / 180)
+            self.sinFA = sin(self.FA * pi / 180)
         except:
             self.error("FA must be a number")
 
@@ -311,7 +308,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(i)
 
         kSpace = np.fft.fftshift(kSpace)
-        #kSpace = np.fft.fft2(kSpace)
+        # kSpace = np.fft.fft2(kSpace)
         for i in range(0, self.phantomSize):
             kSpace[i, :] = np.fft.fft(kSpace[i, :])
         for i in range(0, self.phantomSize):
@@ -331,6 +328,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         errorBox.setText(message)
         errorBox.setStandardButtons(QMessageBox.Ok)
         errorBox.exec_()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

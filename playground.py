@@ -4,16 +4,16 @@ from phantom import phantom
 import cv2
 img = cv2.imread('128.png',  cv2.IMREAD_GRAYSCALE)
 
-<<<<<<< HEAD
+
 
 img = phantom(1500)
 f_img = np.fft.fft2(img)
 
 reconstructed = np.fft.ifft2(f_img).real
-=======
+
 f_img = np.fft.fft2(img)
 reconstructed = np.fft.ifft2(f_img)
->>>>>>> 2786698a834b08d8ec561417dfcadde12145233b
+
 
 reconstructed2 = np.zeros(np.shape(img), dtype=np.complex_)
 
