@@ -37,7 +37,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
-        self.ui.phantomlbl.mousePressEvent = self.pixelClicked
+        self.ui.phantomlbl.mouseDoubleClickEvent = self.pixelClicked
         self.ui.phantomlbl.setScaledContents(True)
 
         self.ui.kspaceLbl.setScaledContents(True)
@@ -49,6 +49,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.qimg = None
         self.img = None
         self.originalPhantom = None
+        self.PD = None
         self.T1 = None
         self.T2 = None
         self.phantomSize = 512
@@ -76,6 +77,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         img = phantom(size)
         img = img * 255
         self.img = img
+        self.PD = img
         self.T1 = phantom(size, 'T1')
         self.T2 = phantom(size, 'T2')
         self.originalPhantom = img
@@ -90,7 +92,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.phantomlbl.setPixmap(QPixmap(self.qimg))
 
     def changePhantomMode(self, value):
-        self.img = phantom(self.phantomSize, value)
+        if value == "PD":
+            self.img = self.PD
+        if value == "T1":
+            self.img = self.T1
+        if value == "T2":
+            self.img = self.T2
+
         self.img = self.img * (255 / np.max(self.img))
         self.originalPhantom = self.img
         self.showPhantomImage()

@@ -2,10 +2,11 @@ import numpy as np
 from PIL import Image
 from phantom import phantom
 
-img = phantom(30)
+
+img = phantom(1500)
 f_img = np.fft.fft2(img)
 
-reconstructed = np.fft.ifft2(f_img)
+reconstructed = np.fft.ifft2(f_img).real
 
 reconstructed2 = np.zeros(np.shape(img), dtype=np.complex_)
 
@@ -14,14 +15,17 @@ for i in range(0, np.shape(img)[0]):
 for i in range(0, np.shape(img)[0]):
     reconstructed2[i, :] = np.fft.fft(f_img[i, :])
 
-reconstructed = np.abs(reconstructed)
+# reconstructed = np.abs(reconstructed)
 reconstructed2 = np.abs(reconstructed2)
 
-img1 = Image.fromarray(reconstructed, 'L')
+img1 = Image.fromarray(f_img, 'L')
 img2 = Image.fromarray(reconstructed2, 'L')
+img3 = Image.fromarray(img, 'L')
+
 
 img1.show()
 img2.show()
+img3.show()
 # from rotation import rotateX, rotateZ
 #
 # matrix = np.zeros((512, 512, 3), dtype=np.complex_)
