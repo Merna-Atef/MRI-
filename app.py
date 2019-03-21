@@ -88,20 +88,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # Check extension
             try:
 
-                mat = np.genfromtxt(fileName,delimiter=',')
-                row = math.floor(np.shape(mat)[0]/3)
+                mat = np.genfromtxt(fileName, delimiter=',')
+                row = math.floor(np.shape(mat)[0] / 3)
                 col = np.shape(mat)[1]
                 self.img = np.zeros([row, col])
-                self.T1 = np.zeros([row,col])
-                self.T2 = np.zeros([row,col])
+                self.T1 = np.zeros([row, col])
+                self.T2 = np.zeros([row, col])
                 self.img = mat[0:row]
                 self.PD = self.img
                 self.originalPhantom = self.img
                 self.phantomSize = row
                 print(np.shape(self.img))
-                self.T1 = mat[row:2*row]
+                self.T1 = mat[row:2 * row]
                 print(np.shape(self.T1))
-                self.T2 = mat[2*row:3*row+1]
+                self.T2 = mat[2 * row:3 * row + 1]
                 print(np.shape(self.T2))
                 self.showPhantomImage()
             except (IOError, SyntaxError):
@@ -236,7 +236,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 pen = QtGui.QPen(QtCore.Qt.blue)
             if self.pixelSelector == 2:
                 pen = QtGui.QPen(QtCore.Qt.yellow)
-            pen.setWidth(0.5)
+            pen.setWidth(0.1)
             paint.setPen(pen)
             # draw rectangle on painter
             paint.drawRect(self.x - 1, self.y - 1, 2, 2)
@@ -296,6 +296,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             rotatedMatrix = rotateX(vectors, self.cosFA, self.sinFA)
             decayedRotatedMatrix = decay(rotatedMatrix, self.T2, self.TE)
 
+
             for j in range(0, self.phantomSize):
                 stepX = (360 / self.phantomSize) * i
                 stepY = (360 / self.phantomSize) * j
@@ -305,20 +306,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 valueToAdd = np.complex(sigmaX, sigmaY)
                 kSpace[i, j] = valueToAdd
 
+            vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
             decayedRotatedMatrix[:, :, 0] = 0
             decayedRotatedMatrix[:, :, 1] = 0
-            vectors = recovery(decayedRotatedMatrix, self.T1, self.TR)
             # vectors = np.zeros((self.phantomSize, self.phantomSize, 3))
             # vectors[:, :, 2] = 1
             self.showKSpace(kSpace)
             print(i)
 
-        kSpace = np.fft.fftshift(kSpace)
+        # kSpace = np.fft.fftshift(kSpace)
         # kSpace = np.fft.fft2(kSpace)
-        for i in range(0, self.phantomSize):
-            kSpace[i, :] = np.fft.fft(kSpace[i, :])
-        for i in range(0, self.phantomSize):
-            kSpace[:, i] = np.fft.fft(kSpace[:, i])
+        # for i in range(0, self.phantomSize):
+        #     kSpace[i, :] = np.fft.fft(kSpace[i, :])
+        # for i in range(0, self.phantomSize):
+        #     kSpace[:, i] = np.fft.fft(kSpace[:, i])
+        kSpace = np.fft.fft2(kSpace)
         self.showKSpace(kSpace)
 
     def showKSpace(self, img):
