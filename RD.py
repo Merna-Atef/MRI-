@@ -13,7 +13,6 @@ def decay(matrix, T2, t=1):
             decayedMat[i, j] = exp.dot(matrix[i][j])
     return decayedMat
 
-
 def recovery(matrix, T1, t=1):
     rows = matrix.shape[0]
     cols = matrix.shape[1]

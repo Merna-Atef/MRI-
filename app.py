@@ -13,6 +13,7 @@ from RD import recovery, decay
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QFileDialog
 from math import sin, cos, pi
+import csv
 
 MAX_CONTRAST = 2
 MIN_CONTRAST = 0.1
@@ -28,20 +29,29 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        #Actions
         self.ui.comboSheppSize.currentTextChanged.connect(self.showPhantom)
         self.ui.comboViewMode.currentTextChanged.connect(self.changePhantomMode)
         self.ui.startSeq.clicked.connect(self.runSequence)
         self.ui.FlipAngle.textChanged.connect(self.setFA)
         self.ui.TimeEcho.textChanged.connect(self.setTE)
         self.ui.TimeRepeat.textChanged.connect(self.setTR)
+        self.ui.btnBrowse.clicked.connect(self.browse)
 
+        #Mouse Events
         self.ui.phantomlbl.setMouseTracking(False)
         self.ui.phantomlbl.mouseMoveEvent = self.editContrastAndBrightness
         self.ui.phantomlbl.mouseDoubleClickEvent = self.pixelClicked
-        self.ui.phantomlbl.setScaledContents(True)
 
+
+
+        #Scaling
+
+        self.ui.phantomlbl.setScaledContents(True)
         self.ui.kspaceLbl.setScaledContents(True)
 
+        #Plots
         self.ui.graphicsPlotT1.setMouseEnabled(False, False)
         self.ui.graphicsPlotT2.setMouseEnabled(False, False)
 
@@ -55,6 +65,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.phantomSize = 512
 
         self.FA = 90
+        self.cosFA = 0
+        self.sinFA = 1
         self.TE = 0.001
         self.TR = 0.5
         self.x = 0
@@ -70,6 +82,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # For Contrast Control
         self.contrast = 1.0
         self.brightness = 0
+
+    def browse(self):
+        #Open Browse Window & Check
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV", (QtCore.QDir.homePath()), "CSV (*.csv)")
+        if fileName:
+            #Check extension
+            try:
+                self.img = np.zeros([512,512])
+                self.T1 = np.zeros([512,512])
+                self.T2 = np.zeros([512,512])
+                mat = np.genfromtxt(fileName,delimiter=',')
+                self.img = mat[0:512]
+                print(np.shape(self.img))
+                self.T1 = mat[512:1024]
+                print(np.shape(self.T1))
+                self.T2 = mat[1024:1537]
+                print(np.shape(self.T2))
+                self.showPhantomImage()
+            except (IOError, SyntaxError):
+                self.error('Check File Extension')
 
     def showPhantom(self, value):
         size = int(value)
@@ -92,6 +124,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.phantomlbl.setPixmap(QPixmap(self.qimg))
 
     def changePhantomMode(self, value):
+
         if value == "PD":
             self.img = self.PD
         if value == "T1":
@@ -102,6 +135,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.img = self.img * (255 / np.max(self.img))
         self.originalPhantom = self.img
         self.showPhantomImage()
+
 
     def editContrastAndBrightness(self, event):
         if self.lastX is None:
@@ -142,42 +176,45 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lastX = currentPositionX
 
     def pixelClicked(self, event):
-        self.pixelSelector = self.pixelSelector + 1
-        self.pixelSelector = self.pixelSelector % 3
-        t1Matrix = self.T1
-        t2Matrix = self.T2
-        self.x = event.pos().x()
-        self.y = event.pos().y()
-        xt = self.ui.phantomlbl.frameGeometry().width()
-        yt = self.ui.phantomlbl.frameGeometry().height()
-        x = event.pos().x() * (self.phantomSize / xt)
-        y = event.pos().y() * (self.phantomSize / yt)
-        x = math.floor(x)
-        y = math.floor(y)
-        self.pixelsClicked.append((x, y))
-        if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
-            self.pixelsClicked.pop(0)
-        self.update()
-        # self.paintEvent(event)
-        t1graph = self.ui.graphicsPlotT1
-        t2gragh = self.ui.graphicsPlotT2
-        t1graph.clear()
-        t2gragh.clear()
-
-        for pixelSet in self.pixelsClicked:
-            x = pixelSet[0]
-            y = pixelSet[1]
-            if self.pixelSelector == 0:
-                color = 'r'
-            if self.pixelSelector == 1:
-                color = 'b'
-            if self.pixelSelector == 2:
-                color = 'y'
-            t1 = t1Matrix[y][x]
-            t2 = t2Matrix[y][x]
-            self.plotting(color, t1 * 1000, t2 * 1000)
-            self.pixelSelector += 1
+        if self.img is None:
+            self.error('Choose Phantom First')
+        else:
+            self.pixelSelector = self.pixelSelector + 1
             self.pixelSelector = self.pixelSelector % 3
+            t1Matrix = self.T1
+            t2Matrix = self.T2
+            self.x = event.pos().x()
+            self.y = event.pos().y()
+            xt = self.ui.phantomlbl.frameGeometry().width()
+            yt = self.ui.phantomlbl.frameGeometry().height()
+            x = event.pos().x() * (self.phantomSize / xt)
+            y = event.pos().y() * (self.phantomSize / yt)
+            x = math.floor(x)
+            y = math.floor(y)
+            self.pixelsClicked.append((x, y))
+            if len(self.pixelsClicked) > MAX_PIXELS_CLICKED:
+                self.pixelsClicked.pop(0)
+            self.update()
+            # self.paintEvent(event)
+            t1graph = self.ui.graphicsPlotT1
+            t2gragh = self.ui.graphicsPlotT2
+            t1graph.clear()
+            t2gragh.clear()
+
+            for pixelSet in self.pixelsClicked:
+                x = pixelSet[0]
+                y = pixelSet[1]
+                if self.pixelSelector == 0:
+                    color = 'r'
+                if self.pixelSelector == 1:
+                    color = 'b'
+                if self.pixelSelector == 2:
+                    color = 'y'
+                t1 = t1Matrix[y][x]
+                t2 = t2Matrix[y][x]
+                self.plotting(color, t1 * 1000, t2 * 1000)
+                self.pixelSelector += 1
+                self.pixelSelector = self.pixelSelector % 3
 
     def paintEvent(self, event):
         # create painter instance with pixmap
@@ -209,16 +246,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plotting(self, color, T1=1000, T2=45):
         t1graph = self.ui.graphicsPlotT1
         t2gragh = self.ui.graphicsPlotT2
-        theta = self.FA * pi / 180
+        #theta = self.FA * pi / 180
         t = np.linspace(0, 10000, 1000)
-        t1graph.plot(np.exp(-t / T1) * cos(theta) + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
-        t2gragh.plot(sin(theta) * np.exp(-t / T2), pen=pg.mkPen(color))
+        t1graph.plot(np.exp(-t / T1) * self.cosFA + 1 - np.exp(-t / T1), pen=pg.mkPen(color))
+        t2gragh.plot(self.sinFA * np.exp(-t / T2), pen=pg.mkPen(color))
 
     def setFA(self, value):
         print(value)
         try:
             value = int(value)
             self.FA = value
+            self.cosFA = cos(self.FA * pi/180)
+            self.sinFA = sin(self.FA * pi/180)
         except:
             self.error("FA must be a number")
 
@@ -227,9 +266,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             value = float(value)
             self.TE = value
-
-
-
         except:
             self.error("TE must be a float")
 
@@ -242,8 +278,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.error("TR must be a float")
 
     def runSequence(self):
-        threading.Thread(target=self.reconstructImage).start()
-        return
+        if self.img is None:
+            self.error('Choose a phantom first')
+        else:
+            threading.Thread(target=self.reconstructImage).start()
+            return
 
     def reconstructImage(self):
         kSpace = np.zeros((self.phantomSize, self.phantomSize), dtype=np.complex_)
@@ -251,7 +290,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         vectors[:, :, 2] = 1
 
         for i in range(0, self.phantomSize):
-            rotatedMatrix = rotateX(vectors, self.FA)
+            rotatedMatrix = rotateX(vectors, self.cosFA, self.sinFA)
             decayedRotatedMatrix = decay(rotatedMatrix, self.T2, self.TE)
 
             for j in range(0, self.phantomSize):
@@ -272,6 +311,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(i)
 
         kSpace = np.fft.fftshift(kSpace)
+        #kSpace = np.fft.fft2(kSpace)
         for i in range(0, self.phantomSize):
             kSpace[i, :] = np.fft.fft(kSpace[i, :])
         for i in range(0, self.phantomSize):
@@ -291,7 +331,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         errorBox.setText(message)
         errorBox.setStandardButtons(QMessageBox.Ok)
         errorBox.exec_()
-
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
